@@ -4,17 +4,106 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>WebRTC App</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-image: linear-gradient(to bottom right, rgb(48, 70, 92), rgb(93, 9, 123));;
+    }
+
+    .video-container {
+      position: relative;
+      width: 90%;
+      max-width: 800px;
+      height: 90vh;
+      max-height: 600px;
+      background: #000;
+      border-radius: 10px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .remote-video, .local-video {
+      flex: 1;
+      background: #333;
+    }
+
+    .local-video {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      width: 150px;
+      height: 150px;
+      border: 2px solid rgb(45, 181, 255);
+      border-radius: 5px;
+    }
+
+    .controls {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
+    }
+
+    .control-button-end {
+      background-color: #e37878;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background-color 0.3s;
+    }
+    .control-button-mute {
+      background-color: #788fe3;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background-color 0.3s;
+    }
+
+
+    .control-button-start {
+      background-color: #73fb54;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background-color 0.3s;
+    }
+
+    .control-button:hover {
+      background-color: #ddd;
+    }
+
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  </style>
   <script src="/socket.io/socket.io.js"></script>
 </head>
 <body>
-  <h1>WebRTC Example</h1>
-  <button id="startCall">Start Call</button>
-  <button id="testCall">Test the call</button>
-  <video id="localVideo" autoplay playsinline></video>
-  <video id="remoteVideo" autoplay playsinline></video>
-  <div>
-    <h2>Offers:</h2>
-    <ul id="offerList"></ul>
+  <div class="video-container">
+    <video class="local-video" id="localVideo" autoplay ></video>
+    <video  class="remote-video" id="remoteVideo" autoplay ></video>
+    <div class="controls">
+      <button class="control-button-start" id="startCall">Start Call</button>
+      <button class="control-button-end" id="endcall">End Call</button>
+      <button class="control-button-mute" id="mute">Mute</button>
+    </div>
   </div>
   <script>
     const socket = io();
@@ -22,7 +111,6 @@
     const localVideo = document.getElementById('localVideo');
     const remoteVideo = document.getElementById('remoteVideo');
     const startCall = document.getElementById('startCall');
-    const testCall = document.getElementById('testCall');
 
     let localStream;
     let peerConnection;
@@ -33,12 +121,8 @@
       localVideo.srcObject = localStream;
     }
 
-    testCall.addEventListener('click',async () => {
-       var message = socket.emit('Test',"Test message")
-       console.log(message.JSON)
-    });
-
     startCall.addEventListener('click', async () => {
+      console.log("Start video");
       peerConnection = new RTCPeerConnection(config);
 
       localStream.getTracks().forEach((track) => peerConnection.addTrack(track, localStream));
@@ -57,6 +141,7 @@
       await peerConnection.setLocalDescription(offer);
       socket.emit('offer', offer);
 
+      console.log("offer : ",offer)
       const offerList = document.getElementById('offerList');
     offerList.innerHTML = offers
       .map((o, index) => `<li>Offer ${index + 1}: ${JSON.stringify(o)}</li>`)
